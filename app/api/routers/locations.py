@@ -1,12 +1,15 @@
 from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.deps import get_db
 from app.models import Location
 from app.schemas.location import LocationCreate, LocationOut
 
 router = APIRouter(prefix="/locations", tags=["locations"])
+
 
 @router.post("", response_model=LocationOut)
 async def create_location(data: LocationCreate, db: AsyncSession = Depends(get_db)):
@@ -18,6 +21,7 @@ async def create_location(data: LocationCreate, db: AsyncSession = Depends(get_d
     await db.commit()
     await db.refresh(loc)
     return LocationOut(id=loc.id, code=loc.code, name=loc.name)
+
 
 @router.get("", response_model=list[LocationOut])
 async def list_locations(db: AsyncSession = Depends(get_db)):

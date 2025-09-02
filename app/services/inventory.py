@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 from decimal import Decimal
+
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased
+
 from app.models.inventory import InventoryItem, InventoryTxn, InventoryTxnType
+
 
 async def _ensure_and_lock_item(session: AsyncSession, product_id, location_id) -> InventoryItem:
     # Create row if missing (idempotent), then select FOR UPDATE to avoid races
@@ -27,7 +30,15 @@ async def _ensure_and_lock_item(session: AsyncSession, product_id, location_id) 
         raise RuntimeError("Failed to fetch inventory item after upsert")
     return item
 
-async def adjust_stock(session: AsyncSession, *, product_id, location_id, delta: Decimal, reason: str | None) -> InventoryItem:
+
+async def adjust_stock(
+    session: AsyncSession,
+    *,
+    product_id,
+    location_id,
+    delta: Decimal,
+    reason: str | None
+) -> InventoryItem:
     async with session.begin():
         item = await _ensure_and_lock_item(session, product_id, location_id)
         new_on_hand = Decimal(item.on_hand) + Decimal(delta)
@@ -47,7 +58,16 @@ async def adjust_stock(session: AsyncSession, *, product_id, location_id, delta:
         await session.flush()
         return item
 
-async def move_stock(session: AsyncSession, *, product_id, from_location_id, to_location_id, qty: Decimal, reason: str | None) -> None:
+
+async def move_stock(
+    session: AsyncSession,
+    *,
+    product_id,
+    from_location_id,
+    to_location_id,
+    qty: Decimal,
+    reason: str | None
+) -> None:
     if from_location_id == to_location_id:
         raise ValueError("from and to locations must be different")
     async with session.begin():
@@ -71,7 +91,15 @@ async def move_stock(session: AsyncSession, *, product_id, from_location_id, to_
             )
         )
 
-async def reserve_stock(session: AsyncSession, *, product_id, location_id, qty: Decimal, reference: str | None) -> InventoryItem:
+
+async def reserve_stock(
+    session: AsyncSession,
+    *,
+    product_id,
+    location_id,
+    qty: Decimal,
+    reference: str | None
+) -> InventoryItem:
     async with session.begin():
         item = await _ensure_and_lock_item(session, product_id, location_id)
         available = Decimal(item.on_hand) - Decimal(item.reserved)
@@ -91,7 +119,15 @@ async def reserve_stock(session: AsyncSession, *, product_id, location_id, qty: 
         )
         return item
 
-async def release_reservation(session: AsyncSession, *, product_id, location_id, qty: Decimal, reference: str | None) -> InventoryItem:
+
+async def release_reservation(
+    session: AsyncSession,
+    *,
+    product_id,
+    location_id,
+    qty: Decimal,
+    reference: str | None
+) -> InventoryItem:
     async with session.begin():
         item = await _ensure_and_lock_item(session, product_id, location_id)
         if qty > Decimal(item.reserved):
@@ -110,7 +146,15 @@ async def release_reservation(session: AsyncSession, *, product_id, location_id,
         )
         return item
 
-async def ship_reserved(session: AsyncSession, *, product_id, location_id, qty: Decimal, reference: str | None) -> InventoryItem:
+
+async def ship_reserved(
+    session: AsyncSession,
+    *,
+    product_id,
+    location_id,
+    qty: Decimal,
+    reference: str | None
+) -> InventoryItem:
     # Decrease both reserved and on_hand
     async with session.begin():
         item = await _ensure_and_lock_item(session, product_id, location_id)

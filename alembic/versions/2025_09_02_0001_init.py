@@ -1,12 +1,14 @@
 from __future__ import annotations
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "2025_09_02_0001"
 down_revision = None
 branch_labels = None
 depends_on = None
+
 
 def upgrade() -> None:
     txn_type = sa.Enum(

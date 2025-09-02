@@ -1,11 +1,15 @@
 from __future__ import annotations
+
 import uuid
-from sqlalchemy import String, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+
+from sqlalchemy import Boolean, String
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 from sqlalchemy.types import TIMESTAMP
+
 from app.db.base import Base
+
 
 class Supplier(Base):
     __tablename__ = "supplier"

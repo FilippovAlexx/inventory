@@ -1,11 +1,15 @@
 from __future__ import annotations
+
 import uuid
-from sqlalchemy import String, Boolean, Text
-from sqlalchemy.orm import Mapped, mapped_column
+
+from sqlalchemy import Boolean, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 from sqlalchemy.types import TIMESTAMP
+
 from app.db.base import Base
+
 
 class Product(Base):
     __tablename__ = "product"
@@ -16,4 +20,8 @@ class Product(Base):
     unit: Mapped[str] = mapped_column(String(16), nullable=False, default="pcs")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[object] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at: Mapped[object] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[object] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
+    )

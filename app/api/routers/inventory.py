@@ -1,22 +1,35 @@
 from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.deps import get_db
 from app.models import InventoryItem
 from app.schemas.inventory import (
     AdjustRequest,
-    MoveRequest,
-    ReserveRequest,
-    ReleaseRequest,
     InventorySnapshot,
+    MoveRequest,
+    ReleaseRequest,
+    ReserveRequest
 )
-from app.services.inventory import adjust_stock, move_stock, reserve_stock, release_reservation, ship_reserved
+from app.services.inventory import (
+    adjust_stock,
+    move_stock,
+    release_reservation,
+    reserve_stock,
+    ship_reserved
+)
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
+
 @router.get("/snapshot", response_model=list[InventorySnapshot])
-async def snapshot(product_id: str | None = None, location_id: str | None = None, db: AsyncSession = Depends(get_db)):
+async def snapshot(
+    product_id: str | None = None,
+    location_id: str | None = None,
+    db: AsyncSession = Depends(get_db)
+):
     q = select(InventoryItem)
     if product_id:
         q = q.where(InventoryItem.product_id == product_id)
@@ -39,42 +52,84 @@ async def snapshot(product_id: str | None = None, location_id: str | None = None
         )
     return out
 
+
 @router.post("/adjust")
 async def adjust(data: AdjustRequest, db: AsyncSession = Depends(get_db)):
     try:
-        item = await adjust_stock(db, product_id=data.product_id, location_id=data.location_id, delta=data.delta, reason=data.reason)
-        return {"status": "ok", "product_id": str(item.product_id), "location_id": str(item.location_id), "on_hand": str(item.on_hand), "reserved": str(item.reserved)}
+        item = await adjust_stock(
+            db,
+            product_id=data.product_id,
+            location_id=data.location_id,
+            delta=data.delta,
+            reason=data.reason
+        )
+        return {
+            "status": "ok",
+            "product_id": str(item.product_id),
+            "location_id": str(item.location_id),
+            "on_hand": str(item.on_hand),
+            "reserved": str(item.reserved)
+        }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/move")
 async def move(data: MoveRequest, db: AsyncSession = Depends(get_db)):
     try:
-        await move_stock(db, product_id=data.product_id, from_location_id=data.from_location_id, to_location_id=data.to_location_id, qty=data.qty, reason=data.reason)
+        await move_stock(
+            db,
+            product_id=data.product_id,
+            from_location_id=data.from_location_id,
+            to_location_id=data.to_location_id,
+            qty=data.qty,
+            reason=data.reason
+        )
         return {"status": "ok"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/reserve")
 async def reserve(data: ReserveRequest, db: AsyncSession = Depends(get_db)):
     try:
-        item = await reserve_stock(db, product_id=data.product_id, location_id=data.location_id, qty=data.qty, reference=data.reference)
+        item = await reserve_stock(
+            db,
+            product_id=data.product_id,
+            location_id=data.location_id,
+            qty=data.qty,
+            reference=data.reference
+        )
         return {"status": "ok", "reserved": str(item.reserved)}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/release")
 async def release(data: ReleaseRequest, db: AsyncSession = Depends(get_db)):
     try:
-        item = await release_reservation(db, product_id=data.product_id, location_id=data.location_id, qty=data.qty, reference=data.reference)
+        item = await release_reservation(
+            db,
+            product_id=data.product_id,
+            location_id=data.location_id,
+            qty=data.qty,
+            reference=data.reference
+        )
         return {"status": "ok", "reserved": str(item.reserved)}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/ship")
 async def ship(data: ReserveRequest, db: AsyncSession = Depends(get_db)):
     try:
-        item = await ship_reserved(db, product_id=data.product_id, location_id=data.location_id, qty=data.qty, reference=data.reference)
+        item = await ship_reserved(
+            db,
+            product_id=data.product_id,
+            location_id=data.location_id,
+            qty=data.qty,
+            reference=data.reference
+        )
         return {"status": "ok", "on_hand": str(item.on_hand), "reserved": str(item.reserved)}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
