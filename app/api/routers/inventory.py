@@ -20,6 +20,7 @@ from app.services.inventory import (
     reserve_stock,
     ship_reserved
 )
+from app.core.security import require_roles
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
@@ -53,7 +54,7 @@ async def snapshot(
     return out
 
 
-@router.post("/adjust")
+@router.post("/adjust", dependencies=[Depends(require_roles("operator", "admin"))])
 async def adjust(data: AdjustRequest, db: AsyncSession = Depends(get_db)):
     try:
         item = await adjust_stock(
@@ -74,7 +75,7 @@ async def adjust(data: AdjustRequest, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/move")
+@router.post("/move", dependencies=[Depends(require_roles("operator", "admin"))])
 async def move(data: MoveRequest, db: AsyncSession = Depends(get_db)):
     try:
         await move_stock(
@@ -90,7 +91,7 @@ async def move(data: MoveRequest, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/reserve")
+@router.post("/reserve", dependencies=[Depends(require_roles("operator", "admin"))])
 async def reserve(data: ReserveRequest, db: AsyncSession = Depends(get_db)):
     try:
         item = await reserve_stock(
@@ -105,7 +106,7 @@ async def reserve(data: ReserveRequest, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/release")
+@router.post("/release", dependencies=[Depends(require_roles("operator", "admin"))])
 async def release(data: ReleaseRequest, db: AsyncSession = Depends(get_db)):
     try:
         item = await release_reservation(
@@ -120,7 +121,7 @@ async def release(data: ReleaseRequest, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/ship")
+@router.post("/ship", dependencies=[Depends(require_roles("operator", "admin"))])
 async def ship(data: ReserveRequest, db: AsyncSession = Depends(get_db)):
     try:
         item = await ship_reserved(

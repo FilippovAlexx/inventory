@@ -7,11 +7,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.models import Location
 from app.schemas.location import LocationCreate, LocationOut
+from app.core.security import require_roles
 
 router = APIRouter(prefix="/locations", tags=["locations"])
 
 
-@router.post("", response_model=LocationOut)
+@router.post(
+    "",
+    dependencies=[Depends(require_roles("operator", "admin"))],
+    response_model=LocationOut
+)
 async def create_location(data: LocationCreate, db: AsyncSession = Depends(get_db)):
     exists = await db.scalar(select(Location).where(Location.code == data.code))
     if exists:
