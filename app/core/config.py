@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -12,7 +12,15 @@ class Settings(BaseSettings):
 
     APP_ENV: str = "dev"
     APP_DEBUG: bool = True
-    APP_SECRET: str = "devsecret"
+    APP_SECRET: str = "devsecret"  # перекроется из .env
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    JWT_ALG: str = "HS256"
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
 
     @property
     def database_url(self) -> str:
@@ -22,4 +30,4 @@ class Settings(BaseSettings):
         )
 
 
-settings = Settings()  # type: ignore[arg-type]
+settings = Settings()
