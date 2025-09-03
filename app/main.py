@@ -3,9 +3,10 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from app.api.routers import inventory, locations, products, purchase
+# Здесь мы импортируем СРАЗУ объекты APIRouter из пакета routers.__init__
+from app.api.routers import auth, products, locations, inventory, purchase_orders
 
-app = FastAPI(title="Inventory API", version="0.1.0")
+app = FastAPI(title="Inventory API", version="0.2.0")
 
 
 @app.get("/healthz")
@@ -13,7 +14,9 @@ async def healthz():
     return JSONResponse({"status": "ok"})
 
 
+# Подключаем роутеры напрямую, БЕЗ .router
+app.include_router(auth)
 app.include_router(products)
 app.include_router(locations)
 app.include_router(inventory)
-app.include_router(purchase)
+app.include_router(purchase_orders)
