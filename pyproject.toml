@@ -9,6 +9,7 @@ dependencies = [
     "asyncpg",
     "alembic",
     "pydantic-settings~=2.4",
+    "email-validator",
 ]
 [tool.ruff]
 line-length = 100
