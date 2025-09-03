@@ -3,6 +3,7 @@ from .location import Location
 from .partners import Supplier
 from .product import Product
 from .purchase import POStatus, PurchaseOrder, PurchaseOrderLine
+from .user import User, Role
 
 __all__ = [
     "Product",
@@ -14,4 +15,6 @@ __all__ = [
     "PurchaseOrder",
     "PurchaseOrderLine",
     "POStatus",
+    "User",
+    "Role",
 ]
