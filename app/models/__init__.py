@@ -3,18 +3,13 @@ from .location import Location
 from .partners import Supplier
 from .product import Product
 from .purchase import POStatus, PurchaseOrder, PurchaseOrderLine
-from .user import User, Role
+from .user import Role, User
 
 __all__ = [
+    "User", "Role",
     "Product",
     "Location",
-    "InventoryItem",
-    "InventoryTxn",
-    "InventoryTxnType",
+    "InventoryItem", "InventoryTxn", "InventoryTxnType",
     "Supplier",
-    "PurchaseOrder",
-    "PurchaseOrderLine",
-    "POStatus",
-    "User",
-    "Role",
+    "PurchaseOrder", "PurchaseOrderLine", "POStatus",
 ]
