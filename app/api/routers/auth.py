@@ -16,6 +16,7 @@ from app.core.security import (
 from app.models.user import Role, User
 from app.schemas.auth import Token
 from app.schemas.user import UserCreate, UserOut
+from app.errors import HTTPError, InvalidSecretError, UserExistsError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -26,22 +27,26 @@ async def register_user(
     db: AsyncSession = Depends(get_db),
     x_admin_secret: str | None = Header(default=None, alias="X-Admin-Secret")
 ):
-    print("DEBUG register:", x_admin_secret, settings.APP_SECRET, flush=True)
-    if x_admin_secret != settings.APP_SECRET:
-        raise HTTPException(status_code=403, detail="Invalid admin secret")
-    exists = await db.scalar(select(User).where(User.email == data.email))
-    if exists:
-        raise HTTPException(status_code=409, detail="User already exists")
-    user = User(
-        email=data.email,
-        full_name=data.full_name,
-        hashed_password=get_password_hash(data.password),
-        role=Role(data.role)
-    )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-    return UserOut(id=user.id, email=user.email, full_name=user.full_name, role=user.role.value)
+    try:
+        if x_admin_secret != settings.APP_SECRET:
+            raise InvalidSecretError(message="Invalid admin secret")
+        exists = await db.scalar(select(User).where(User.email == data.email))
+        if exists:
+            raise UserExistsError(message="User already exists")
+        user = User(
+            email=data.email,
+            full_name=data.full_name,
+            hashed_password=get_password_hash(data.password),
+            role=Role(data.role)
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return UserOut(id=user.id, email=user.email, full_name=user.full_name, role=user.role.value)
+    except InvalidSecretError as e:
+        raise HTTPException(detail=e.message, status_code=403)
+    except UserExistsError as e:
+        raise HTTPException(detail=e.message, status_code=409)
 
 
 @router.post("/token", response_model=Token)
