@@ -1,25 +1,24 @@
 from __future__ import annotations
 
-import uuid
+from typing import List
 
-from sqlalchemy import Boolean, String
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.sql import func
-from sqlalchemy.types import TIMESTAMP
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.mixins import IsActiveMixin, TimestampMixin, UUIDPKMixin
 
 
-class Location(Base):
+class Location(UUIDPKMixin, TimestampMixin, IsActiveMixin, Base):
+    """Локация/склад/ячейка. Пара (product, location) формирует остаток."""
     __tablename__ = "location"
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    code: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
+
+    code: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[object] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at: Mapped[object] = mapped_column(
-        TIMESTAMP(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now()
+
+    inventory_items: Mapped[List["InventoryItem"]] = relationship(
+        "InventoryItem", back_populates="location", lazy="selectin"
     )
+
+    def __repr__(self) -> str:
+        return f"<Location {self.code} {self.name}>"

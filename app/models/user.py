@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import enum
-import uuid
 
-from sqlalchemy import Boolean, Enum, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Enum, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.sql import func
-from sqlalchemy.types import TIMESTAMP
 
 from app.db.base import Base
+from app.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDPKMixin
 
 
 class Role(str, enum.Enum):
@@ -18,16 +15,13 @@ class Role(str, enum.Enum):
     viewer = "viewer"
 
 
-class User(Base):
+class User(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
+    """Пользователь системы; роль используется в авторизации/доступах."""
     __tablename__ = "user_account"
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     full_name: Mapped[str | None] = mapped_column(String(255))
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    hashed_password: Mapped[str] = mapped_column(Text(), nullable=False)
     role: Mapped[Role] = mapped_column(
-        Enum(Role, name="user_role"),
-        default=Role.operator,
-        nullable=False
+        Enum(Role, name="user_role"), nullable=False, default=Role.viewer
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[object] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
