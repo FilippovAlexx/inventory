@@ -25,3 +25,7 @@ class User(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
     role: Mapped[Role] = mapped_column(
         Enum(Role, name="user_role"), nullable=False, default=Role.viewer
     )
+
+    @property
+    def is_active(self) -> bool:
+        return not self.is_deleted
