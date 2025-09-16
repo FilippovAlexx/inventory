@@ -13,3 +13,11 @@ dependencies = [
 ]
 [tool.ruff]
 line-length = 100
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-asyncio",
+  "httpx",
+  "anyio",
+  "psycopg2-binary", # для создания/удаления тестовой БД через sync-engine
+]
